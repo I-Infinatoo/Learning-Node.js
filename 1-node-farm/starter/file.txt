@@ -1,0 +1,23 @@
+Docs Link : https://docs.google.com/document/d/1YYg7swtQFpGmnQbo_UcYQzrBegKswwZrkHrvDweit14/edit?usp=sharing 
+
+Dependencies :
+    slugify : used to make URLs more readable out of name
+    nodemon : it will automatically restart the .js application whenever there is a change in the working directly
+
+versioning of dependencies :
+    
+    versio : "<symbol><num1>.<num2>.<num3>" ==> num1 : major fix, num2 : minor fix, num3 : patch fix
+    
+    ^ : indicates that the application is ready to install both the patch fixes as well as minor updates of the dependecy.
+    ~ : indicates that only patch fixes are allowed to be installed
+    * : includes all the version 
+
+sharing the file to other system :
+    Project will be shared without the <node_modules> folder, as it is the files which are used by the dependencies used in the project.
+    Uploading a file to any where (with "node_modules" folder) will result in the project having tons of files and folders init, which can result in failure during the upload.
+
+    So, share the project without the "node_modules" folder.
+
+    After downloading the project run "npm install" in the root directory of the project to get the "node_modules" folder back.
+
+ 
