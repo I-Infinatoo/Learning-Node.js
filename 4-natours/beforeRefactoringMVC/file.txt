@@ -1,0 +1,109 @@
+REST : Repesentational State Transfer
+    it is an API
+
+    Principles:
+        1. Seperate API into logical resources
+        2. Expose structured, resource based URLs
+        3. Use HTTP methods
+        4. Send Data as JSON
+        5. Be stateless
+
+
+eg : https://www.natours.com/addNewTour
+
+     <---------------URL--------------->
+                            <-ENDPOINT->
+
+
+
+
+HTTP methods :
+    create :
+        POST : expect data to come in from the client side os as to create a new resource on the server side
+    
+
+        <it is used to create a new resource on the server>
+
+    Read:
+        GET : used to send the data ot the client
+    
+    Update: (both have the ability to send the data to the server)
+        PUT : client is supposed to sent the entire updated object
+        PATCH : it is suppose to send the only updated part of the object
+
+
+        <they are used to update the existing resource>
+
+    Delete:
+        DELETE : unique identifier of the resources to be deleted should be the part of the URLs
+
+    :
+   \:/
+    .
+    CRUD OPERAITONS
+
+
+
+JSON: It is a very lightweight data interchange format
+
+Formating is done before sending the data back to the client, and the format used is JSEND.
+
+Stateless: All state is handeled on the client side. This means that each request must contain all the information necessary to the process a certain request. The server should not have to remember the previous request.
+
+
+-   stateless and statefullness APIs ......?
+
+
+- To get the request saved into the server or into the DB
+
+
+
+///////////////////////////////////////////// using express /////////////////////////////////////
+
+
+-------------------------------------------------------------------
+checking the input 
+-------------------------------------------------------------------
+exports.middleware = (req, res, next) => {
+
+    if (!req.body.name || !req.body.price) {
+        return res.status(400).json({
+            status: 'fail',
+            message: "Missing name or price"
+        })
+    }
+
+    next();
+}
+------------------------------------------------------------------
+
+
+-- default middleware is used to route to some default page ...in case of wrong path used by the 
+    client.
+
+    eg.     app.use(express.static("dafault directory path"));
+
+-------------------------------------------------------------------
+
+-   environment variable
+
+    - the configuration file should be imported beforeany other import in the main js file
+
+    -- changed he script in the `package.json` and included the production rule as well
+        ("start:prod": "NODE_ENV=prroduction nodemon server.js")
+
+
+-------------------------------------------------------------------
+- Connect compas with atlas
+
+-------------------------------------------------------------------
+
+- MVC architecture (used to seperate the Application Logic from Business Logic)
+        :Controller
+
+        :Model
+
+        :View
+
+
+- fro MVC refactoring:  1. modules/tourModule.js
