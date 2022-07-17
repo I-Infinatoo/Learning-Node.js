@@ -1,0 +1,609 @@
+REST : Repesentational State Transfer
+    it is an API
+
+    Principles:
+        1. Seperate API into logical resources
+        2. Expose structured, resource based URLs
+        3. Use HTTP methods
+        4. Send Data as JSON
+        5. Be stateless
+
+
+eg : https://www.natours.com/addNewTour
+
+     <---------------URL--------------->
+                            <-ENDPOINT->
+
+
+
+
+HTTP methods :
+    create :
+        POST : expect data to come in from the client side os as to create a new resource on the server side
+    
+
+        <it is used to create a new resource on the server>
+
+    Read:
+        GET : used to send the data ot the client
+    
+    Update: (both have the ability to send the data to the server)
+        PUT : client is supposed to sent the entire updated object
+        PATCH : it is suppose to send the only updated part of the object
+
+
+        <they are used to update the existing resource>
+
+    Delete:
+        DELETE : unique identifier of the resources to be deleted should be the part of the URLs
+
+    :
+   \:/
+    .
+    CRUD OPERAITONS
+
+
+
+JSON: It is a very lightweight data interchange format
+
+Formating is done before sending the data back to the client, and the format used is JSEND.
+
+Stateless: All state is handeled on the client side. This means that each request must contain all the information necessary to the process a certain request. The server should not have to remember the previous request.
+
+
+-   stateless and statefullness APIs ......?
+
+
+- To get the request saved into the server or into the DB
+
+
+
+///////////////////////////////////////////// using express /////////////////////////////////////
+
+
+-------------------------------------------------------------------
+checking the input 
+-------------------------------------------------------------------
+exports.middleware = (req, res, next) => {
+
+    if (!req.body.name || !req.body.price) {
+        return res.status(400).json({
+            status: 'fail',
+            message: "Missing name or price"
+        })
+    }
+
+    next();
+}
+------------------------------------------------------------------
+
+
+-- default middleware is used to route to some default page ...in case of wrong path used by the 
+    client.
+
+    eg.     app.use(express.static("dafault directory path"));
+
+-------------------------------------------------------------------
+
+-   environment variable
+
+    - the configuration file should be imported beforeany other import in the main js file
+
+    -- changed he script in the `package.json` and included the production rule as well
+        ("start:prod": "NODE_ENV=prroduction nodemon server.js")
+
+
+-------------------------------------------------------------------
+- Connect compas with atlas
+
+-------------------------------------------------------------------
+
+- MVC architecture (used to seperate the Application Logic from Business Logic)
+        :Controller
+
+        :Model
+
+        :View
+
+
+- fro MVC refactoring:  1. modules/tourModule.js
+
+
+
+- to create a new model
+const newTour = new Tour({...});
+- to save the model on to the DB
+newTour.save(); // will return the promise as well
+
+- the above task can be replicated using
+Tour.create({...}) 
+
+
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+
+-   after MVC refactoring, updated the schema
+
+- writing a script to read the jason file and import the data to the DB (import-dev-data.js)
+
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+// basic query of mongoDB
+        // {difficulty: 'easy', duration{$gte : 5} }
+
+- to filter the query from the request
+- advanced query filter(gt, gt, lte, lt)
+- query to sort the results(accourding to price)
+
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+- field limiting : to reduce the bandwidth of the user whenever user requests
+    heavy data sets for multiple times
+
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+- we can exclude fields from the schema as well,,,so that it should not be visible
+    even by using defalut query
+
+    - this can be done by uing `select:false` property in the schema
+
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+
+pagination : allowing the user to select only certain pages from the results
+    when there is alot of pages in the results
+
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+REFACTORING OF API FEATURE
+    - putted the filtering feature in side a class to make it generic
+        i.e. to make it reusable for the other projects as well
+
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+AGGRIGATION:
+    - used to aggregate the data (
+        - query can be made on the data, stored in mongoDB
+        - allowed by mongoDB
+    )
+
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+VIRTUAL ROPERTIES:
+    - used for derived fields
+    - it is same as the VIEW concept in DBMS
+    - it is declared in the schema section... so everytine the query is made, 
+        virtual properties can be applied.
+    
+    - we need to explicitely define in schema that there is a virtual object (through schema objet).
+
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+MONGOOSE MIDDLEWARE:
+    - fundamental concept
+    - similar ass express middleware, to make something happen between two events
+    - can be runned before and after saving an event (pre/post)
+   
+    - Types:
+        - Document (acts on the currently processing document)
+            - pre: have access to next() middleware
+            - post: along with next(), it has access to the latest saved document
+        
+        - Query (before and after a certain query is executed) 
+            (used to access the private data stored in the DB, which is not ment to be displayed to all users, and only ment for the internal staff or for the VIP customers)
+            (this secrecy is maintained by creating a sceret schema in the model)
+
+            (this also follows the same scenario as of `AGGRIGATION` middleware)
+
+
+        - Aggregate (before and after agression happens)
+            (if we talk using our current scenario, then agreegation middleware is used
+            to hide the `secretTour` from the aggregation function as well, used in th
+            `tour-status` route)
+
+            (another way of hiding the secretTour from the aggregation result is:
+            we can define the `match` property which will only show the non-secret-tour
+            
+            But the problem with this solution is... we have to have the `match` property 
+            in every aggregation used in the code)
+
+            (that is why we will be using `Aggregate` middleware) 
+        
+        - Model
+            implementing instnce method, which will be available after being queried
+            
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+SLUG:
+    has to be defined in the schema as well to get it stored and displayed during production
+
+    - executes after all pre-middleware functions have executed
+
+
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+To get the time taken by the query to get executed, we can take the help of our middleware
+(pre and post). Simply by passing a start time in the `this` pre query middleware and then 
+in the post query middleware subtract (the time given to the `this`) from (`this.currentTime`)
+
+
+This will give the total time the query took to get executed
+
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+
+^^ DATA VALIDATION ^^ SANITIZATION ^^
+
+    - It is to validate the input data from the user : DATA VALIDATION
+    - It is the act of cleaning the data got from user before saving : SANITIZATION
+
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+
+DATA VALIDATION:
+    
+    
+    - It done in the schema level
+
+    - Require
+    - Maxlength and Minlength and enum in a string
+    - max, min for numbers, dates
+
+    - specify our own validators
+        ^CUSTOM VALIDATORS^
+            
+            /*
+             *  validate: {
+             *
+             *      validator: function (val) {
+             *          return val < this.price;    // 100 < 200
+             *      },
+             *      //                         VALUE have the access to the input value
+             *      message: "Discount price ({VALUE}) should be less than price"
+             *      //                         this feature is internal to mongoose
+             *  }
+             */
+            
+
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+NODE DEBUGGER (ndb)
+    
+    - tool developed by google for debugging (it is able to alter the original file in real time)
+    
+    - fundamental aspect of debugging is to set breakpoints
+
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+HANDELER FUNCTION
+    - to catch all the other routes which are not defined by the program logic
+
+    - this can be achieved by adding a middleware at the end of all the calls for the routes
+        as the all the middleware executes in a sequential manner and then, if no other defined 
+        middleware is called by the request then the last middleware will handel the request 
+        (in app.js)
+
+        app.all('*', (req, res, next) => {
+
+            res.status(404).json({
+                status: 'fail',
+                message: `Could not found the ${req.originalUrl} on this server!`
+            })
+        });
+
+        here: .all ==> will handel all the types of request: post, get, patch, delete
+                '*' ===> will represent all the routes which are not handeled by the above handlers
+
+
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+GLOBAL ERROR HANDLING MIDDLEWARE
+
+    - used to handel all kinds of OPERATIONAL and PROGRAMMING ERROR
+
+
+    - in middleware when used 4 arguments: (err, req, res, next)
+        to this express knows that this is the error handling function
+
+    - whatever is passed into `next()` function, express considers it as an error
+        error skips all the middlewares present in the stack and 
+        passed to the global error handler
+
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+appError class:
+    - generic class to handle the error messages
+    - isOperational property in class will be used to filter the error messages
+        which has to be shown to users (only operatinal error not programming error)
+
+        
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+ADDING 404 NOT FOUND ERRORS:
+    - suppose this is a valid mongoose id: '627562eacf79da033955e4f5'
+    - now if I make a slight change in the id such as : '627562eacf79da033955e4f4'
+    -                                                                           - 
+    - this will not give the 404 not found error or status code to the user, instead
+        it will give the 200 success code  with the data : 'null' , which is not considered as 
+        a good practice.
+    
+    - to claer this thing, we will place a check on the final res for null value (in tour controler)       
+
+
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+Distinguishing b/w production error and development error
+
+
+
+
+    - mark mongoose error as prodection lvl error, to hide the error data from the client.
+
+
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+UNHANDLED RAJECTIONS
+    - There is a promise that got rejected and left unhandled
+
+    Global:
+        - process stores the rejections and from there we can handle them globally😀
+
+    process.exit( <0 or 1> );    
+        0 : success
+        1 : uncalled exception
+
+
+    - on using  `process.exit(1)` in the error handling part, it is abrouptly closing the application...
+        and we can stop this from happening by first closing the server and then the application itself.
+
+        - server.close() : will give the server the required time to complete all the pending requests, and then
+        close the server
+
+
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+AUTHENTICATION, AUTORIZATION, SECURITY
+
+    - can be achieved by using tockens
+
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+- The encryption of the passwords has to be done on the module itself
+    because it is the place which deals with the data
+
+    For that we will be using `PRE-SAVE MIDDLEWARE` of mongoose
+
+- before getting the data and saving it to the DB : `pre` middleware
+
+- we are using hashing technique for the encryption
+
+- `bcryptJS` used for the calculation of the hash
+
+- after password validaton, we do not require the confirm password to be persistent in the database,
+    therefore it is set to the undefined after the completion of the validation
+
+
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+For the AUTHENTICATION: we are using JWT(JSON WEB TOCKEN)
+    
+    - it is a string generated by the server upon login of the user ans sent bsck to the user,
+    for the further use (user uses POST method while login process).
+    - every time the user wants to access the protected route, he sends the tocken with the requested route (using GET method)
+    - upon verification user gets the access of the route.
+
+    -this whole rocess happens while using HTTPS protocol
+
+    --------------------------------------------------------
+
+    - the `secret` string passed in JWT is stored in the config file along with the `expiration time`
+    - according to the SHA256, secret key must be 32 characters long
+     
+
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+INSTANCE METHOD
+    - available on all documents of the certain collection.
+    - in this case this metod is available for all the user collection
+
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+ACCESS PROTECTION to routes
+    - it is implemented using middleware just before calling the route
+    - if the user provides correct JWT then middleware will allow the access of the route
+    - else it will generate an error
+
+    - in case of headers, the standard name for the token is 
+            key :`Authorization`
+            value : `Bearer`<token>    
+
+
+    // 2. verification token
+    const decoded = await promicify(jwt.verify)(token, process.env.JWT_SECRET);
+
+        - verify: asynchronous function, means it will verify the token and then cal the callback function
+        - promicify: to make it return the promise | present in `util` module
+
+
+    - The Authorization steps here included:
+        1. getting token and check if its there?
+        2. verification token
+        3. check if user still exists
+        4. check if user changed password after the token has issued 
+    
+
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+AUTHORIZATION
+
+    - this has to done so that anyone could not be able to delete any tour from the database
+    
+    1. 1st we will check whether the user is even logged in or not
+    2. Then we will check if the logged in user has admin rights or not
+
+    - here we are using `restrictTo()` function... it will only allow the admin and the lead-guide to delete a tour
+
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+PASSWORD RESET
+
+    1. User will send the POST request from its email id to reset the password
+    2. Sys. will create a reset token and it to the email address
+    3. User than sends this token along with the new passwords
+
+    - resetToken is stored in the DB on the temp. basis
+
+    `nodemailer` is used to send the email to the user
+
+
+    - to send the email to the client ...we will be using `mailtrap.io` service.
+
+    -`resetPassword` route will accept `PATCH` request because it will modify the password stored in the DB
+
+    -if in any case... 'sentEmail' encounter any error, 
+    then along with sending the error to the global handler, we need to set back the token and the time period of the token 
+    for the security perpose
+
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+PASSWORD UPDATE
+
+    - this will allowed to only loggined users, to reset their password
+
+    - logging in the user and sending the JWT is refractered
+
+
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+The user can update itself by useing UPDATEME middleware
+whereas the middleware userControler.updateUser() will be used by the admin to update the user's info
+
+    - we can use `findbyIdAndUpdate` method in the updateMe as we are required to deal with the non-sensetive data as well.
+    
+    
+    - after `updateME` the token is getting illegal (i.e) we are getting JWT token error
+        but after relogin everthing goes to normal
+
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+Deleting the current user:
+
+    - we will only set the property of the account to INACTIVE, when the user wants to delete its account
+    - doing this will allow user to revive its account in the future or 
+    - admin can see the details of the inactive account
+
+    - query middleware is used to exclude the object which has the field active set to false
+
+
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+for security:
+
+    - we will now store the token in the cookie
+
+
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+implimenting rate limiter
+    
+    - implemented as a global middleware
+
+    - count the number of requests comming from the IP, 
+        when there are too many request from one IP then boack those requests
+
+    - npm package which supports this features is: express-rate-limit
+
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+DATA SANITIZATION
+        package_middleware: express-mongo-sanitize, xss-clean
+
+    -   data sanitization against NoSQL query injection
+    -   data sanitization against XSS attacks
+
+
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+PARAMETER POLLUTION
+
+        package_middleware: hpp ==> Http Parameter Polution
+
+
+
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+-------------------- MongoDB Data Modelling -----------------------
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+Process of taking unstructured data generated by real world scenarioand then structure it into logical data model in a database
+This is done by using some set of criteria
+
+Structuring the data will reflect the real world relationship between entities
+
+    - Diff. tyoes of relationships b/w data
+        
+        - 1:1
+
+        - 1:Many
+            - 1:Few
+            - 1:Many (in hundreds/thousands)
+            - 1:Ton (in millions)
+
+        - Many:Many
+
+    - Referencing/Normalization v/s embedding/denormalization
+        image in the file...
+            - Referencing vs embedding
+            - ToEmbeddOrReference
+
+    - Embedding or Referencing other documents
+    - Types of Referencing
+
+        - child referencing
+            - when there is a relationship of 1:few
+                in this case if the number of reference is very large then reference array of parent will grow indefinately
+                cause the limit to exceed the 16mb data limit 
+
+        - parent referencing
+            - when there is a relationship of 1:Many or 1:Ton
+                because in this case there is no array which will grow indefinately holding the reference of other data
+
+        - two way referencing
+            - when there is a relationship of Many:Many
+
+
+
+    ------ Natours Data Model -----
+
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+    - while useing referencing method in the tour model, we will use the `populate` mathod while performing query (for the tour display)
+    
+    - `populate()` will replace the reference with its object while the the time of display
+
+    - populate() creates seperate query behind the scene, so usnig populate() on large scale would affect the performance
+
+    - since we are required to use populate() function to show the results in every display route,
+        therefore it is good to have a query middleware in the model, instead to duplicating same code everywhere in the display route
+
+
+
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+VIRTUAL POPULATE 
+
+    -  This feature allows us to populate the parent model with the child model
+        without actually placing the child model in the parent model.
+        This will prevent the parent model to grow idefinately when there are large number of childs 
+
+
+-------------------------------------------------------------------
+-------------------------------------------------------------------
+for the route like: 
+    
+    POST /tour/23e32edg/review              // to write tehh review to that tour
+    GET  /tour/23e32edg/review/             // for all review of that tour
+    GET  /tour/23e32edg/review/342rdw432    // for the specific review of that tour
+
+    we are required to use nested routes
+        1. ot visit the tour route and then from there to create review route
